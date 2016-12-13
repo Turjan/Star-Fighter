@@ -1,0 +1,8 @@
+First Level
+BACKGROUNDLVL1
+Hunter 2 0 0
+Hunter 2 500 0
+Scarab 3 250 0
+Hunter 5 240 0
+Hunter 8 100 0
+Hunter 8 450 0
