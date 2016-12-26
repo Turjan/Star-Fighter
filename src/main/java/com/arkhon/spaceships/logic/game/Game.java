@@ -59,7 +59,6 @@ public class Game {
     
     public final void setLevels() throws OverTheMaxCargoSpaceException,FileNotFoundException,WrongDataException, SQLException, ClassNotFoundException{ //loading all the levels
         controller.createLevelFiles(levelFiles);                        //creating the files from the db
-        
         for(File file:levelFiles.listFiles()){                          //upload the leveldata 
             levels.add(Level.levelFactory(file));
         }
@@ -69,8 +68,9 @@ public class Game {
     public void run(){
         
         while(true) {
+            System.out.println(nextOption);
             switch(nextOption){
-            
+                
                 case ERROR: shutDown(); return;
                 
                 case MENU: nextOption = mainMenu.run(); break;
