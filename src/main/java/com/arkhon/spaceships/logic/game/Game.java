@@ -10,21 +10,25 @@ import com.arkhon.spaceships.logic.machines.Ship;
 import com.arkhon.spaceships.logic.machines.exceptions.OverTheMaxCargoSpaceException;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Game {
     
-    public enum Option{ MENU,NEW,EXIT,CONTINUE,WIN, ERROR }
+    public enum Option{ MENU,NEW,EXIT,CONTINUE,WIN, ERROR } //these define what the game will do next
     
-    private ArrayList<Level> levels;
-    private MainMenu mainMenu;
-    private GameTable gameTable;
-    private Logic logic;
-    private int levelIndex;
-    private Option nextOption;
+    private static final File levelFiles = new File("src/main/resources/files/levels");  //there will be the files of the different levels, while the game is runnig
+    
+    private DBController controller; //used for interactions with the database
+    private Logic logic;            //the logic of the game
+    private MainMenu mainMenu;      //first part of the gui, the menu of the game
+    private GameTable gameTable;    //second part of the gui, the window where the game plays
+    private int levelIndex;         //shows the current level on wich the player is
+    private Option nextOption;      //show what will the game do next
+    private ArrayList<Level> levels;//store the levels
     
     private Game(){};
-    
     
     public static Game GameFactory(){
         
@@ -35,6 +39,7 @@ public class Game {
             game.levels = new ArrayList<>();
             game.nextOption = MENU;
             game.levelIndex = 0;
+            game.controller = DBController.DBControllerFactory();
             game.setLevels();
         }
         catch(OverTheMaxCargoSpaceException|WrongDataException e){ 
@@ -44,39 +49,42 @@ public class Game {
         catch(FileNotFoundException e){ 
             displayErrorDialog("Can not read file \n" + e.getMessage());
             game.nextOption = ERROR;
+        } 
+        catch (SQLException | ClassNotFoundException e) {
+            displayErrorDialog("Error with the database connection \n" + e.getMessage());
+            game.nextOption = ERROR;
         }
         return game;
     }
     
-    public final void setLevels() throws OverTheMaxCargoSpaceException,FileNotFoundException,WrongDataException{ //loading all the levels
-        File levelFiles = new File("src/main/resources/files/levels");
-        for(File file:levelFiles.listFiles()){
+    public final void setLevels() throws OverTheMaxCargoSpaceException,FileNotFoundException,WrongDataException, SQLException, ClassNotFoundException{ //loading all the levels
+        controller.createLevelFiles(levelFiles);                        //creating the files from the db
+        
+        for(File file:levelFiles.listFiles()){                          //upload the leveldata 
             levels.add(Level.levelFactory(file));
         }
+        Collections.sort(levels);
     }
     
     public void run(){
         
-        while(nextOption != EXIT) {
-            System.out.println("TestWhile");
+        while(true) {
             switch(nextOption){
             
-                case ERROR: System.out.println("Error"); return;
+                case ERROR: shutDown(); return;
                 
-                case MENU: System.out.println("MENU"); nextOption = mainMenu.run(); break;
+                case MENU: nextOption = mainMenu.run(); break;
                     
                 case NEW:
-                    System.out.println("NEW");
                     levelIndex = 0;
                     startLevel(0);
                     break;
                     
                 case WIN:
-                    System.out.println("Victory!");
                     startLevel(++levelIndex);
                     break;
                     
-                case EXIT: return;
+                case EXIT: shutDown(); return;
                   
             }
         }    
@@ -102,6 +110,14 @@ public class Game {
         gameTable = new GameTable(logic);
         gameTable.run();
         nextOption = gameTable.getOption();
+    }
+    
+    private void shutDown() {
+        try                     { controller.shutDown(); }
+        catch(SQLException e)   { displayErrorDialog("Error with the database connection \n" + e.getMessage()); }
+        finally{ 
+            for (File file : levelFiles.listFiles()) { file.deleteOnExit(); }
+        }
     }
     
     private static void displayErrorDialog(String message){

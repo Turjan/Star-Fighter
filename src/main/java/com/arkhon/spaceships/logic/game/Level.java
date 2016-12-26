@@ -10,8 +10,9 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Level {
+public class Level implements Comparable<Level>{
     
+    public final int levelNumber;
     public final String name;
     public final GameImage backgroundImage;
     public final int levelWidth;
@@ -24,6 +25,7 @@ public class Level {
         
             int levelWidth = 800;
             int levelHeight = 600;
+            int levelNumber = Integer.valueOf(sc.nextLine());
             String name = sc.nextLine();
             GameImage backgroundImage = GameImage.valueOf(sc.nextLine());
             
@@ -38,13 +40,14 @@ public class Level {
                     case "Scarab": ship = new Scarab(null, Direction.SOUTH);break; 
                     default: throw new WrongDataException("Not existing ship class found in " + file.getName());    
                 }
-                enemies.add(new Enemy(ship, Integer.valueOf(data[1]), new Position(Integer.valueOf(data[2]), Integer.valueOf(data[3]))));
+                enemies.add(new Enemy(ship, Integer.valueOf(data[3]), new Position(Integer.valueOf(data[1]), Integer.valueOf(data[2]))));
             }
-            return new Level(name,backgroundImage, levelWidth, levelHeight, enemies);
+            return new Level(levelNumber, name, backgroundImage, levelWidth, levelHeight, enemies);
         }
     }
     
-    private Level(String name, GameImage backgroundImage, int levelWidth, int levelHeight, ArrayList<Enemy> enemies) {
+    private Level(int levelNumber, String name, GameImage backgroundImage, int levelWidth, int levelHeight, ArrayList<Enemy> enemies) {
+        this.levelNumber = levelNumber;
         this.name = name;
         this.backgroundImage = backgroundImage;
         this.levelWidth = levelWidth;
@@ -57,6 +60,11 @@ public class Level {
         ArrayList<Enemy> copy = new ArrayList<>();
         for(Enemy e:enemies){ copy.add(e.copyEnemy()); }
         return copy; 
+    }
+
+    @Override
+    public int compareTo(Level o) {
+        return this.levelNumber-o.levelNumber;
     }
     
     
