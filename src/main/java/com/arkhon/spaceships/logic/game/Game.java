@@ -18,6 +18,7 @@ public class Game {
     
     public enum Option{ MENU,NEW,EXIT,CONTINUE,WIN, ERROR } //these define what the game will do next
     
+    private static final String DBFile = "src/main/resources/SQL/gameDB.db";
     private static final File levelFiles = new File("src/main/resources/files/levels");  //there will be the files of the different levels, while the game is runnig
     
     private DBController controller; //used for interactions with the database
@@ -39,7 +40,7 @@ public class Game {
             game.levels = new ArrayList<>();
             game.nextOption = MENU;
             game.levelIndex = 0;
-            game.controller = DBController.DBControllerFactory();
+            game.controller = DBController.DBControllerFactory(DBFile);
             game.setLevels();
         }
         catch(OverTheMaxCargoSpaceException|WrongDataException e){ 
@@ -52,6 +53,11 @@ public class Game {
         } 
         catch (SQLException | ClassNotFoundException e) {
             displayErrorDialog("Error with the database connection \n" + e.getMessage());
+            game.nextOption = ERROR;
+        }
+        //write every exception handling over this
+        catch(Exception e) {  
+            displayErrorDialog("Unknown Error! \n" + e.getMessage());
             game.nextOption = ERROR;
         }
         return game;
@@ -116,7 +122,7 @@ public class Game {
         try                     { controller.shutDown(); }
         catch(SQLException e)   { displayErrorDialog("Error with the database connection \n" + e.getMessage()); }
         finally{ 
-            for (File file : levelFiles.listFiles()) { file.deleteOnExit(); }
+            for (File file : levelFiles.listFiles()) { file.delete(); }
         }
     }
     

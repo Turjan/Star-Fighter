@@ -8,11 +8,10 @@ import java.sql.*;
 public class DBController {
     
     private Connection connection;
-    private static final String DBPath = "src/main/resources/SQL/levels.db";
     
     private DBController(){}
     
-    public static DBController DBControllerFactory() throws SQLException{
+    public static DBController DBControllerFactory(String DBPath) throws SQLException{
         
         DBController dbc;
         try{
@@ -29,6 +28,7 @@ public class DBController {
     
     public void createLevelFiles(File parent) throws SQLException, FileNotFoundException, ClassNotFoundException{
 
+        parent.mkdirs();  //making sure that the parent directories existing
         Statement stm = connection.createStatement();
 
         ResultSet rs = stm.executeQuery("SELECT* FROM LEVELS;");
